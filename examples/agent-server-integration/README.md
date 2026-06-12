@@ -1,10 +1,10 @@
-# agent-server integration
+# agent-server 集成指南
 
-This guide shows how to replace the inlined `component-catalog` / `component-spec` modules in [agent-server](https://github.com/your-org/agent-server) with the standalone CSI packages.
+本文说明如何用独立 CSI 包替换 agent-server 内联的 `component-catalog` / `component-spec` 模块。
 
-## 1. Install packages
+## 1. 安装包
 
-In `agent-server/package.json`:
+在 `agent-server/package.json` 中添加：
 
 ```json
 {
@@ -15,7 +15,7 @@ In `agent-server/package.json`:
 }
 ```
 
-During local development, use a workspace link:
+本地开发可使用 workspace 链接：
 
 ```json
 {
@@ -26,15 +26,15 @@ During local development, use a workspace link:
 }
 ```
 
-## 2. Configure at startup
+## 2. 启动时配置
 
-In `AgentService` or `OptionsBuilder` initialization:
+在 `AgentService` 或 `OptionsBuilder` 初始化处：
 
 ```typescript
 import { join } from 'path';
 import { configureCsi } from '@csi/core';
 import { createCsiMcpServers } from '@csi/mcp';
-import { getIconsSummary } from './tools/component-catalog/icons'; // keep icon provider in app
+import { getIconsSummary } from './tools/component-catalog/icons'; // 图标 provider 保留在应用层
 
 const dataRoot = join(process.cwd(), 'dist/agent/tools/component-data');
 
@@ -52,9 +52,9 @@ toolManager.register('component-catalog', catalog);
 toolManager.register('component-spec', spec);
 ```
 
-## 3. Keep existing data layout
+## 3. 保持现有数据目录不变
 
-No change to `src/agent/tools/component-data/` — CSI scripts now live in the standalone repo:
+`src/agent/tools/component-data/` 无需改动 — CSI 脚本已迁移到独立仓库：
 
 ```bash
 cd ../component-schema-index
@@ -63,30 +63,33 @@ pnpm csi:all
 pnpm generate:types
 ```
 
-## 4. Remove duplicated code (optional migration)
+## 4. 删除重复代码（可选迁移步骤）
 
-After verifying MCP tools work via `@csi/mcp`, you can delete:
+确认 `@csi/mcp` 工作正常后，可删除：
 
-- `src/agent/tools/component-spec/` (except thin re-export shim if desired)
-- `src/agent/tools/component-catalog/sdkMcpServer.ts` + resolvers
-- `scripts/csi-indexer.mts`, `csi-sync.mts`, `generate-flattened-types.mts`
+- `src/agent/tools/component-spec/`（或保留薄 re-export 垫片）
+- `src/agent/tools/component-catalog/sdkMcpServer.ts` 及解析器
+- `scripts/csi-indexer.mts`、`csi-sync.mts`、`generate-flattened-types.mts`
 
-Keep in agent-server:
+agent-server 中应保留：
 
-- Workflow prompts referencing `mcp__component-catalog__*` / `mcp__component-spec__*`
-- `component-data/` assets (registry, metadata, examples)
-- Icon provider (`icons.ts`) — app-specific
+- 引用 `mcp__component-catalog__*` / `mcp__component-spec__*` 的工作流提示词
+- `component-data/` 资产（registry、metadata、examples）
+- 图标 provider（`icons.ts`）— 应用特有逻辑
 
-## 5. Tool IDs unchanged
+## 5. 工具 ID 不变
 
-MCP server names remain `component-catalog` and `component-spec`, so existing prompts and performance DB queries (`figma2code_tool_call_detail.tool_name`) stay compatible.
+MCP 服务名仍为 `component-catalog` 和 `component-spec`，现有提示词及性能数据库查询（`figma2code_tool_call_detail.tool_name`）保持兼容。
 
-## 6. Verification
+## 6. 验证
 
 ```bash
-# In agent-server after integration
+# agent-server 集成完成后
 pnpm build
-pnpm verify:resolver  # or run via CSI repo with CSI_DATA_ROOT
+
+# 在 agent-server 目录运行（需有 node_modules 中的组件库）
+CSI_DATA_ROOT="$(pwd)/src/agent/tools/component-data" \
+  node --import tsx/esm ../component-schema-index/scripts/verify-resolver.mts
 ```
 
-Compare a generateCode run's `tool_calls_json` — `get-component-source` call counts and `content_length` should match baseline.
+对比一次 generateCode 运行的 `tool_calls_json` — `get-component-source` 的调用次数和 `content_length` 应与基线一致。

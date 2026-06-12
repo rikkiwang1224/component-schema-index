@@ -1,61 +1,61 @@
 # Component Schema Index (CSI)
 
-**Automated metadata extraction and on-demand retrieval for closed-source component libraries.**
+**面向闭源组件库的自动化元数据提取与按需检索方案。**
 
-AI agents generating UI code need component names, prop types, and usage examples — but closed-source libraries have no public docs crawlable by LLMs. CSI solves this with a **build-time index + runtime two-tier MCP retrieval** pipeline, originally proven in production on 180+ Figma2Code runs with measurable tool-call telemetry.
+AI Agent 在生成 UI 代码时需要了解组件名称、Props 类型和使用示例，但闭源组件库往往没有可被 LLM 直接爬取的公开文档。CSI 通过 **构建时索引 + 运行时两级 MCP 检索** 解决这一问题，并已在 Figma2Code 生产环境中经过 **180+ 次生码任务** 验证，具备完整的工具调用遥测数据支撑。
 
 ```
 npm .d.ts  →  csi:index  →  csi:sync  →  registry + metadata
                                               ↓
-                         list-available-components  (light catalog)
-                         get-component-source       (deep types + examples)
+                         list-available-components  （轻量目录）
+                         get-component-source       （深度类型 + 示例）
 ```
 
-## Features
+## 特性
 
-- **CSI Indexer** — TypeScript AST extraction from npm `.d.ts` (props, complexity, deprecated detection)
-- **Smart sync** — merges auto-indexed data with manual overrides (`contextLevel`, `subsumes`, descriptions)
-- **Two-tier retrieval** — catalog (~26K chars) for discovery, spec (~90K) on demand only
-- **Graded context** — `types-only` / `types-with-brief-example` / `full-example` per component
-- **Flattened types** — pre-merged `.d.ts` for deep reference chains (ProTable, ProForm, etc.)
-- **Semantic example ranking** — `relevantFeatures` prioritizes examples by design intent
-- **Subsumes** — prevents redundant lookups when high-order components internalize base controls
-- **MCP-ready** — Claude Agent SDK servers out of the box
+- **CSI Indexer** — 从 npm 包的 `.d.ts` 通过 TypeScript AST 自动提取（Props、复杂度、废弃检测）
+- **智能同步** — 自动索引结果与手动配置合并（`contextLevel`、`subsumes`、描述等）
+- **两级检索** — catalog 用于发现（约 26K 字符），spec 按需深度查询（约 90K 字符）
+- **分级上下文** — 按组件配置 `types-only` / `types-with-brief-example` / `full-example`
+- **扁平化类型** — 为高阶组件（ProTable、ProForm 等）预合并深层 `.d.ts` 引用链
+- **语义示例排序** — `relevantFeatures` 按设计意图优先返回最相关示例
+- **内化机制（subsumes）** — 高阶组件已内化基础控件时，避免冗余查询
+- **MCP 开箱即用** — 基于 Claude Agent SDK 的服务端可直接注册
 
-## Packages
+## 包结构
 
-| Package | Description |
-|---------|-------------|
-| [`@csi/core`](./packages/core) | Registry loader, npm/examples resolvers, formatters |
-| [`@csi/mcp`](./packages/mcp) | `component-catalog` + `component-spec` MCP servers |
+| 包 | 说明 |
+|----|------|
+| [`@csi/core`](./packages/core) | 注册表加载、npm/示例解析、格式化输出 |
+| [`@csi/mcp`](./packages/mcp) | `component-catalog` + `component-spec` MCP 服务 |
 
-## Quick start
+## 快速开始
 
 ```bash
 pnpm install
 pnpm build
 
-# Configure your library
+# 配置你的组件库
 cp data/registry.example.json data/registry.json
-# Edit data/registry.json — set npmPackage, typesPath, platform
+# 编辑 data/registry.json — 设置 npmPackage、typesPath、platform
 
-# Install your component library (must ship .d.ts)
+# 安装组件库（需包含 .d.ts 类型声明）
 pnpm add -D your-ui-library
 
-# Build index
+# 构建索引
 pnpm csi:all
 pnpm generate:types
 pnpm verify:resolver
 ```
 
-Point to external data (e.g. from [agent-server](https://github.com/your-org/agent-server)):
+指向外部数据目录（例如来自 agent-server）：
 
 ```bash
 export CSI_DATA_ROOT=/path/to/component-data
 pnpm verify:resolver
 ```
 
-## Runtime usage
+## 运行时使用
 
 ```typescript
 import { join } from 'path';
@@ -69,49 +69,49 @@ configureCsi({
 
 const { catalog, spec } = createCsiMcpServers({
   enableIcons: true,
-  iconProvider: (platform) => ({ /* your icon rules */ }),
+  iconProvider: (platform) => ({ /* 你的图标规则 */ }),
 });
 
-// Register with Claude Agent SDK toolManager:
+// 注册到 Claude Agent SDK toolManager：
 // toolManager.register('component-catalog', catalog);
 // toolManager.register('component-spec', spec);
 ```
 
-### MCP tools
+### MCP 工具
 
-| Tool | Server | Purpose |
-|------|--------|---------|
-| `list-available-components` | component-catalog | Name, description, keyProps |
-| `get-component-source` | component-spec | Types + ranked examples |
-| `list-icons` | component-catalog | Optional, via `iconProvider` |
+| 工具 | 服务 | 用途 |
+|------|------|------|
+| `list-available-components` | component-catalog | 组件名、描述、keyProps |
+| `get-component-source` | component-spec | 类型定义 + 排序后的示例 |
+| `list-icons` | component-catalog | 可选，通过 `iconProvider` 注入 |
 
-## CLI
+## CLI 命令
 
-| Command | Description |
-|---------|-------------|
-| `pnpm csi:index [package]` | Index npm package(s) → `data/csi/` |
-| `pnpm csi:sync [--dry-run]` | Merge CSI → `registry.json` + `metadata/` |
-| `pnpm csi:all` | Index + sync |
-| `pnpm generate:types` | Build `flattened-types/` |
-| `pnpm verify:resolver` | Smoke test resolvers |
+| 命令 | 说明 |
+|------|------|
+| `pnpm csi:index [package]` | 索引 npm 包 → `data/csi/` |
+| `pnpm csi:sync [--dry-run]` | 合并 CSI 输出 → `registry.json` + `metadata/` |
+| `pnpm csi:all` | 索引 + 同步 |
+| `pnpm generate:types` | 生成 `flattened-types/` |
+| `pnpm verify:resolver` | 解析器冒烟测试 |
 
-## Architecture
+## 架构文档
 
-See [docs/architecture.md](./docs/architecture.md) and [docs/subsumes.md](./docs/subsumes.md).
+详见 [docs/architecture.md](./docs/architecture.md) 和 [docs/subsumes.md](./docs/subsumes.md)。
 
-## Integration with agent-server
+## 与 agent-server 集成
 
-See [examples/agent-server-integration/README.md](./examples/agent-server-integration/README.md).
+详见 [examples/agent-server-integration/README.md](./examples/agent-server-integration/README.md)。
 
-## Why this approach works (evidence)
+## 为什么这套方案有效（数据佐证）
 
-From production Figma2Code telemetry:
+来自 Figma2Code 生产遥测：
 
-- **180+ runs** with tool-call breakdown — component queries are ~30% of context, tunable via `contextLevel`
-- **Per-call audit** — `tool_name`, `duration_ms`, `content_length`, `input_json` in DB
-- **Subsumes** — born from a real ProFilter regression (dual API confusion → fields not rendering)
-- **Latency model** — 5–6 agentic rounds; parallel catalog + spec queries save ~20–25% (see optimization doc)
+- **180+ 次运行** 的工具调用分解 — 组件查询约占上下文 30%，可通过 `contextLevel` 调节
+- **逐次审计** — 数据库记录 `tool_name`、`duration_ms`、`content_length`、`input_json`
+- **subsumes 机制** — 源于 ProFilter 真实回归（双 API 混淆导致 fields 不渲染）
+- **延迟模型** — 5–6 轮 Agentic Loop；catalog 与 spec 并行可节省约 20–25% 耗时
 
-## License
+## 许可证
 
 MIT
