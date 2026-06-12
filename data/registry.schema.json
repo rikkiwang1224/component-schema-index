@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Component Data Registry",
+  "description": "组件库注册表，定义各组件库的元数据和上下文策略",
+  "type": "object",
+  "required": ["version", "libraries"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": {
+      "type": "string",
+      "description": "注册表版本号"
+    },
+    "libraries": {
+      "type": "object",
+      "description": "组件库配置，key 为库标识名",
+      "additionalProperties": {
+        "$ref": "#/definitions/LibraryConfig"
+      }
+    }
+  },
+  "definitions": {
+    "LibraryConfig": {
+      "type": "object",
+      "required": ["displayName", "platform", "importPrefix", "npmPackage", "typesPath", "defaultContextLevel"],
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "组件库显示名称"
+        },
+        "platform": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pc", "h5", "rn"]
+          },
+          "description": "支持的平台列表"
+        },
+        "importPrefix": {
+          "type": "string",
+          "description": "import 语句前缀，如 'ssc-ui-react'"
+        },
+        "npmPackage": {
+          "type": "string",
+          "description": "npm 包名"
+        },
+        "typesPath": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ],
+          "description": "类型定义路径模式，{component} 为占位符。支持数组表示多个候选路径（按优先级排列）"
+        },
+        "examplesDir": {
+          "type": "string",
+          "default": "examples",
+          "description": "示例目录名称，默认 'examples'，部分库使用 'demos'"
+        },
+        "defaultContextLevel": {
+          "$ref": "#/definitions/ContextLevel",
+          "description": "未显式配置组件的默认上下文级别"
+        },
+        "skill": {
+          "type": "string",
+          "description": "关联的 Agent Skill 名称"
+        },
+        "csi": {
+          "$ref": "#/definitions/CSIMetadata",
+          "description": "CSI (Component Schema Index) 自动索引的元数据"
+        },
+        "components": {
+          "type": "object",
+          "description": "组件级别配置覆盖，key 为 PascalCase 组件名",
+          "additionalProperties": {
+            "$ref": "#/definitions/ComponentConfig"
+          }
+        }
+      }
+    },
+    "ComponentConfig": {
+      "type": "object",
+      "properties": {
+        "contextLevel": {
+          "$ref": "#/definitions/ContextLevel",
+          "description": "上下文级别覆盖"
+        },
+        "dirName": {
+          "type": "string",
+          "description": "自定义目录名（当 PascalCase → kebab-case 自动转换不匹配时）"
+        },
+        "typesPath": {
+          "type": "string",
+          "description": "自定义类型定义路径（覆盖库级别配置）"
+        },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "组件别名列表，用于名称匹配"
+        },
+        "flattenTypes": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否使用预生成的扁平化类型定义（通过 AST 精确提取跨文件引用链）。启用后运行时优先读取 flattened-types/ 目录下的预生成文件"
+        },
+        "complexity": {
+          "$ref": "#/definitions/ComplexityScore",
+          "description": "CSI 自动评估的复杂度（可选，仅作参考）"
+        }
+      }
+    },
+    "CSIMetadata": {
+      "type": "object",
+      "description": "CSI Indexer 自动生成的元数据，记录最近一次索引的结果",
+      "properties": {
+        "lastIndexed": {
+          "type": "string",
+          "format": "date",
+          "description": "最近一次 CSI 索引的日期"
+        },
+        "discoveredCount": {
+          "type": "integer",
+          "description": "CSI 自动发现的组件总数（含子组件）"
+        },
+        "typesEntry": {
+          "type": "string",
+          "description": "CSI 检测到的 barrel export 类型入口文件路径"
+        }
+      }
+    },
+    "ComplexityScore": {
+      "type": "object",
+      "properties": {
+        "score": {
+          "type": "integer",
+          "description": "加权复杂度分数"
+        },
+        "level": {
+          "type": "string",
+          "enum": ["simple", "moderate", "complex"],
+          "description": "复杂度等级"
+        }
+      }
+    },
+    "ContextLevel": {
+      "type": "string",
+      "enum": ["types-only", "types-with-brief-example", "full-example"],
+      "description": "上下文级别：types-only 只返回类型定义；types-with-brief-example 返回类型+简短示例；full-example 返回类型+完整示例+组合模式"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "./registry.schema.json",
+  "version": "2.0.0",
+  "libraries": {
+    "your-ui-library": {
+      "displayName": "Your UI Library",
+      "platform": ["web"],
+      "importPrefix": "your-ui-library",
+      "npmPackage": "your-ui-library",
+      "typesPath": "typings/components/{component}/types.d.ts",
+      "examplesDir": "examples",
+      "defaultContextLevel": "types-only",
+      "components": {
+        "Button": {},
+        "Table": {
+          "contextLevel": "full-example",
+          "flattenTypes": true
+        },
+        "ProForm": {
+          "contextLevel": "full-example",
+          "flattenTypes": true,
+          "subsumes": ["Input", "Select", "DatePicker"]
+        }
+      }
+    }
+  }
+}

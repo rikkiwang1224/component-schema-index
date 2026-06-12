@@ -1,0 +1,27 @@
+{
+  "name": "component-schema-index",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Component Schema Index (CSI) — automated metadata extraction and on-demand retrieval for closed-source component libraries",
+  "packageManager": "pnpm@9.15.0",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm -r build",
+    "csi:index": "tsx scripts/csi-indexer.mts",
+    "csi:sync": "tsx scripts/csi-sync.mts",
+    "csi:all": "tsx scripts/csi-indexer.mts && tsx scripts/csi-sync.mts",
+    "generate:types": "tsx scripts/generate-flattened-types.mts",
+    "verify:resolver": "tsx scripts/verify-resolver.mts"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.76",
+    "@csi/core": "workspace:*",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "zod": "^4.3.6"
+  }
+}
