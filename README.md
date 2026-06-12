@@ -2,7 +2,7 @@
 
 **面向闭源组件库的自动化元数据提取与按需检索方案。**
 
-AI Agent 在生成 UI 代码时需要了解组件名称、Props 类型和使用示例，但闭源组件库往往没有可被 LLM 直接爬取的公开文档。CSI 通过 **构建时索引 + 运行时两级 MCP 检索** 解决这一问题，并已在 Figma2Code 生产环境中经过 **180+ 次生码任务** 验证，具备完整的工具调用遥测数据支撑。
+AI Agent 在生成 UI 代码时需要了解组件名称、Props 类型和使用示例，但闭源组件库往往没有可被 LLM 直接爬取的公开文档。CSI 通过 **构建时索引 + 运行时两级 MCP 检索** 解决这一问题，并已在 Figma2Code 生产环境中经过 **180+ 次生码任务** 验证，具备完整的工具调用数据支撑。
 
 ```
 npm .d.ts  →  csi:index  →  csi:sync  →  registry + metadata
@@ -10,6 +10,18 @@ npm .d.ts  →  csi:index  →  csi:sync  →  registry + metadata
                          list-available-components  （轻量目录）
                          get-component-source       （深度类型 + 示例）
 ```
+
+## 系统架构
+
+Figma2Code 采用三层架构：上层统一处理设计数据，中层通过 CSI 提供与技术栈无关的组件检索能力，下层按目标平台独立配置生码规范。
+
+![Figma2Code 系统架构](./docs/assets/architecture.png)
+
+| 层级 | 职责 | 关键产物 |
+|------|------|----------|
+| 上层统一 | 解析 Figma 设计稿，识别 UI 元素与布局 | 结构化设计描述 |
+| 中层通用 | 构建时索引 + 运行时两级 MCP 检索 | CSI、`component-catalog`、`component-spec` |
+| 下层独立 | 按目标平台配置 Prompt、Workflow、Skills | 各技术栈专属生码规范 |
 
 ## 特性
 
