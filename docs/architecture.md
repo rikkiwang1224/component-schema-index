@@ -77,6 +77,8 @@ CSI 的目标是将这一过程自动化，形成**单向数据流**：
 
 从 npm 包的 `.d.ts` 类型声明中自动提取组件元数据。
 
+> 索引阶段如何估算跨文件 import 深度、以及如何与扁平化生成配合，见 [type-import-chain.md](./type-import-chain.md)。
+
 **输入**：`node_modules/<package>/typings/` 或 `dist/esm/` 下的类型声明文件
 
 **处理流程**：
@@ -249,6 +251,7 @@ AI 选定组件后，用此工具获取详细类型和示例。
 - 构建时由 `generate-flattened-types.mts` 生成
 - 将深度引用链中所有类型声明合并到单个文件
 - 适用于 ProTable、ProForm 等高阶组件（引用链深、文件数多）
+- **实现细节**见 [type-import-chain.md](./type-import-chain.md)
 
 **示例解析**：
 - 从 `component-data/examples/<lib>/<comp-dir>/` 加载

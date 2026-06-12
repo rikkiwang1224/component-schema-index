@@ -109,7 +109,9 @@ const { catalog, spec } = createCsiMcpServers({
 
 ## 架构文档
 
-详见 [docs/architecture.md](./docs/architecture.md) 和 [docs/subsumes.md](./docs/subsumes.md)。
+- [整体架构](./docs/architecture.md)
+- [类型 import 链追踪](./docs/type-import-chain.md) — 构建时如何发现、合并 `.d.ts` 跨文件依赖
+- [组件内化机制（subsumes）](./docs/subsumes.md)
 
 ## 与 agent-server 集成
 
